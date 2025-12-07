@@ -3,7 +3,11 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
-const { sendAuthCookie } = require('../middleware/auth');
+const {
+  sendAuthCookie,
+  clearAuthCookie,
+  authRequired,
+} = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -60,17 +64,15 @@ router.post('/login', async (req, res) => {
       nombre: user.nombre,
     };
 
-    // Generamos JWT para la app móvil
+    // JWT para app móvil / front (Bearer)
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: '12h',
     });
 
-    // Cookie httpOnly con JWT (panel web)
+    // Cookie httpOnly (por si en algún momento quieres usarla)
     sendAuthCookie(res, payload);
 
-    // 👇 Respuesta compatible con web y móvil:
-    // - web puede seguir usando id, email, role directamente
-    // - móvil puede usar data.user.id, data.token, etc.
+    // Respuesta compatible con web y móvil
     res.json({
       ok: true,
       token,
@@ -84,34 +86,23 @@ router.post('/login', async (req, res) => {
 });
 
 /**
- * /api/auth/me
- * Devuelve el usuario actual leyendo la cookie "token"
- * Usado por tu AuthContext en el panel web
+ * GET /api/auth/me
+ * Devuelve el usuario actual si está autenticado.
+ * Usa authRequired => acepta cookie "token" o Authorization: Bearer <token>
  */
-router.get('/me', (req, res) => {
-  const token = req.cookies?.token;
-  if (!token) return res.json(null);
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    res.json(decoded);
-  } catch (err) {
-    console.error('Error verificando token en /me:', err);
-    res.json(null);
-  }
+router.get('/me', authRequired, (req, res) => {
+  return res.json({
+    ok: true,
+    user: req.user,
+  });
 });
 
 /**
  * LOGOUT: borra cookie de sesión
  */
 router.post('/logout', (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'none',
-    path: '/',
-  });
-  res.json({ ok: true });
+  clearAuthCookie(res);
+  return res.json({ ok: true });
 });
 
 module.exports = router;
