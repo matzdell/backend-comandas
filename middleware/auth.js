@@ -8,9 +8,9 @@ function sendAuthCookie(res, payload) {
     expiresIn: '12h',
   });
 
-  // En producción (Render, HTTPS): SameSite=None + Secure
-  // En local: Lax + sin Secure
   const sameSite = isProd ? 'none' : 'lax';
+
+  console.log('[sendAuthCookie] isProd:', isProd, 'sameSite:', sameSite);
 
   res.cookie('token', token, {
     httpOnly: true,
@@ -40,13 +40,17 @@ function authRequired(req, res, next) {
     token = req.headers.authorization.split(' ')[1];
   }
 
-  if (!token) return res.status(401).json({ error: 'No autenticado' });
+  if (!token) {
+    console.log('❌ authRequired: SIN TOKEN. cookies que llegaron:', req.cookies);
+    return res.status(401).json({ error: 'No autenticado' });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
-  } catch {
+  } catch (err) {
+    console.log('❌ authRequired: token inválido:', err.message);
     return res.status(401).json({ error: 'Token inválido o expirado' });
   }
 }
