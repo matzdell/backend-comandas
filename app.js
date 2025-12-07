@@ -17,16 +17,39 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS dev: permite cookies y cualquier origin (localhost / IP LAN)
+// ======================= CORS ==========================
+const allowedOrigins = [
+  "http://localhost:3000",                  // CRA local
+  "http://localhost:5173",                  // Vite local (por si acaso)
+  "https://frontend-comandas-coral.vercel.app", // tu front en Vercel
+];
+
 app.use(
   cors({
-    origin: true,       // hace echo del Origin que llega
-    credentials: true,  // permite cookies
+    origin: (origin, callback) => {
+      // Peticiones sin Origin (Postman, curl) -> permitir
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("CORS bloqueado para origen:", origin);
+      return callback(new Error("Not allowed by CORS"), false);
+    },
+    credentials: true, // permite cookies (para httpOnly, etc.)
   })
 );
 
-// y OJO:
-app.set('trust proxy', 1); // muy recomendable en Render
+// Render / proxies
+app.set("trust proxy", 1); // muy recomendable en Render para cookies seguras
+
+// ======================= Rutas ==========================
+
+// Ruta simple de prueba/healthcheck (opcional pero útil)
+app.get("/", (req, res) => {
+  res.json({ ok: true, msg: "Backend Comandas funcionando" });
+});
 
 // ---------- Rutas públicas ----------
 app.use("/api/auth", authRoutes);
@@ -39,7 +62,12 @@ if (typeof adminRoutes === "function") {
   adminRoutes.router &&
   typeof adminRoutes.router === "function"
 ) {
-  app.use("/api/admin", authRequired, roleRequired(["Jefe"]), adminRoutes.router);
+  app.use(
+    "/api/admin",
+    authRequired,
+    roleRequired(["Jefe"]),
+    adminRoutes.router
+  );
 }
 
 // ---------- Productos ----------
