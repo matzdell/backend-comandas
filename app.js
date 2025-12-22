@@ -18,24 +18,22 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ======================= CORS ==========================
-// ✅ Agrega aquí tu dominio "Production" de Vercel
+// ✅ SOLO ORIGINS (sin /login, sin rutas)
 const allowedOrigins = [
-  "http://localhost:3000",                       // CRA local
-  "http://localhost:5173",                       // Vite local
-  "https://matzdell-frontend-comandas-gfuw79c92-matzdells-projects.vercel.app/login",  // Vercel prod
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://matzdell-frontend-comandas-gfuw79c92-matzdells-projects.vercel.app",
 ];
 
-// ✅ Permite también previews de Vercel del mismo proyecto
+// ✅ Permite también previews de Vercel de TU proyecto (opcional, pero útil)
 function isAllowedOrigin(origin) {
-  if (!origin) return true; // Postman/curl (sin Origin)
+  if (!origin) return true; // Postman/curl
 
   if (allowedOrigins.includes(origin)) return true;
 
-  // Previews: https://frontend-comandas-coral-git-branch-xxxx.vercel.app
-  if (
-    origin.endsWith(".vercel.app") &&
-    origin.includes("frontend-comandas-coral")
-  ) {
+  // Permitir previews del MISMO proyecto:
+  // https://matzdell-frontend-comandas-xxxxx.vercel.app
+  if (origin.endsWith(".vercel.app") && origin.includes("matzdell-frontend-comandas")) {
     return true;
   }
 
@@ -49,15 +47,16 @@ const corsOptions = {
     console.log("CORS bloqueado para origen:", origin);
     return callback(new Error("Not allowed by CORS"));
   },
-  credentials: true, // si NO usas cookies, puedes poner false y quitarlo del front
+  credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
-// ✅ Preflight para TODAS las rutas
-app.options("*", cors(corsOptions));
+
+// ✅ PRE-FLIGHT seguro (en vez de "*")
+app.options(/.*/, cors(corsOptions));
 
 // Render / proxies
 app.set("trust proxy", 1);
