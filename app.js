@@ -22,7 +22,7 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:3000",                       // CRA local
   "http://localhost:5173",                       // Vite local
-  "https://vercel.com/matzdells-projects/matzdell-frontend-comandas/6EhJZwA8p98onyKZfcyNa91VA6Yp",  // Vercel prod
+  "https://matzdell-frontend-comandas-gfuw79c92-matzdells-projects.vercel.app/login",  // Vercel prod
 ];
 
 // ✅ Permite también previews de Vercel del mismo proyecto
