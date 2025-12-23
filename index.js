@@ -3,8 +3,6 @@ require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
 const app = require('./app');
-const productosRoutes = require('./routes/productos');
-const comandasModule = require('./routes/comandas');
 const cajaRoutes = require('./routes/caja'); // para usar obtenerTotalesMesas()
 
 const server = http.createServer(app);
@@ -15,17 +13,12 @@ const io = new Server(server, {
 });
 
 // Pasar instancia IO a router de comandas (para KDS, etc.)
+const comandasModule = require('./routes/comandas');
 if (comandasModule.setSocketInstance) {
   comandasModule.setSocketInstance(io);
 }
 
-// Rutas API
-app.use('/api/productos', productosRoutes);
-app.use('/api/comandas', comandasModule.router);
-
-// ❌ ELIMINADAS las líneas de kpiRoutes (ahora están en app.js con protección)
-
-// OJO: la ruta /api/caja debe estar montada en app.js (app.use('/api/caja', cajaRoutes))
+// ❌ ELIMINADAS las rutas duplicadas - ya están en app.js
 
 // Salud
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
