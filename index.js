@@ -6,7 +6,6 @@ const app = require('./app');
 const productosRoutes = require('./routes/productos');
 const comandasModule = require('./routes/comandas');
 const cajaRoutes = require('./routes/caja'); // para usar obtenerTotalesMesas()
-const kpiRoutes = require('./routes/kpi.routes'); // 👈 YA LO TIENES
 
 const server = http.createServer(app);
 
@@ -23,7 +22,8 @@ if (comandasModule.setSocketInstance) {
 // Rutas API
 app.use('/api/productos', productosRoutes);
 app.use('/api/comandas', comandasModule.router);
-app.use('/api/kpi', kpiRoutes); // 👈 YA LO TIENES ✅
+
+// ❌ ELIMINADAS las líneas de kpiRoutes (ahora están en app.js con protección)
 
 // OJO: la ruta /api/caja debe estar montada en app.js (app.use('/api/caja', cajaRoutes))
 
