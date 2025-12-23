@@ -1,49 +1,40 @@
 // app.js
 require("dotenv").config();
-
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
-const comandasModule = require("./routes/comandas");   // { router, setSocketInstance }
-const productosModule = require("./routes/productos"); // router o { router }
-const cajaRoutes = require("./routes/caja");           // router
+const comandasModule = require("./routes/comandas");
+const productosModule = require("./routes/productos");
+const cajaRoutes = require("./routes/caja");
+const kpiRoutes = require("./routes/kpi.routes"); // 👈 AÑADIDO
 const { authRequired, roleRequired } = require("./middleware/auth");
 
 const app = express();
-
 app.use(express.json());
 app.use(cookieParser());
 
 // ======================= CORS ==========================
-// ✅ SOLO ORIGINS (sin /login, sin rutas)
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "https://matzdell-frontend-comandas-gfuw79c92-matzdells-projects.vercel.app",
 ];
 
-// ✅ Permite también previews de Vercel de TU proyecto (opcional, pero útil)
 function isAllowedOrigin(origin) {
   if (!origin) return true; // Postman/curl
-
   if (allowedOrigins.includes(origin)) return true;
-
-  // Permitir previews del MISMO proyecto:
-  // https://matzdell-frontend-comandas-xxxxx.vercel.app
+  // Permitir previews del MISMO proyecto
   if (origin.endsWith(".vercel.app") && origin.includes("matzdell-frontend-comandas")) {
     return true;
   }
-
   return false;
 }
 
 const corsOptions = {
   origin: (origin, callback) => {
     if (isAllowedOrigin(origin)) return callback(null, true);
-
     console.log("CORS bloqueado para origen:", origin);
     return callback(new Error("Not allowed by CORS"));
   },
@@ -54,15 +45,10 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// ✅ PRE-FLIGHT seguro (en vez de "*")
 app.options(/.*/, cors(corsOptions));
-
-// Render / proxies
 app.set("trust proxy", 1);
 
 // ======================= Rutas ==========================
-
 // Healthcheck
 app.get("/", (req, res) => {
   res.json({ ok: true, msg: "Backend Comandas funcionando" });
@@ -104,6 +90,16 @@ if (cajaRoutes && typeof cajaRoutes === "function") {
     authRequired,
     roleRequired(["Cajero", "Jefe"]),
     cajaRoutes
+  );
+}
+
+// ---------- KPI (solo Jefe) ---------- 👈 AÑADIDO
+if (kpiRoutes && typeof kpiRoutes === "function") {
+  app.use(
+    "/api/kpi",
+    authRequired,
+    roleRequired(["Jefe"]),
+    kpiRoutes
   );
 }
 
