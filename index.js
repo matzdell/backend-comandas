@@ -2,12 +2,11 @@
 require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
-
 const app = require('./app');
 const productosRoutes = require('./routes/productos');
 const comandasModule = require('./routes/comandas');
 const cajaRoutes = require('./routes/caja'); // para usar obtenerTotalesMesas()
-const kpiRoutes = require('./routes/kpi.routes');
+const kpiRoutes = require('./routes/kpi.routes'); // 👈 YA LO TIENES
 
 const server = http.createServer(app);
 
@@ -24,7 +23,8 @@ if (comandasModule.setSocketInstance) {
 // Rutas API
 app.use('/api/productos', productosRoutes);
 app.use('/api/comandas', comandasModule.router);
-app.use('/api/kpi', kpiRoutes);
+app.use('/api/kpi', kpiRoutes); // 👈 YA LO TIENES ✅
+
 // OJO: la ruta /api/caja debe estar montada en app.js (app.use('/api/caja', cajaRoutes))
 
 // Salud
@@ -44,7 +44,6 @@ app.get('/api/emit-test', (_req, res) => {
 // ======================= SOCKETS ==========================
 io.on('connection', (socket) => {
   console.log('[SOCKET] cliente conectado', socket.id);
-
   let cajaInterval = null;
 
   // 👉 Caja se suscribe a los totales de mesas
@@ -90,7 +89,6 @@ io.on('connection', (socket) => {
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor backend escuchando en todas las interfaces en puerto ${PORT}`);
 });
