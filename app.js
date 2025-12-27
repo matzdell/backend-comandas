@@ -20,15 +20,21 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "https://matzdell-frontend-comandas-gfuw79c92-matzdells-projects.vercel.app",
+  "https://frontend-mesero-o7rscz2da-matzdells-projects.vercel.app", // ✅ NUEVO FRONT
 ];
 
 function isAllowedOrigin(origin) {
   if (!origin) return true; // Postman/curl
   if (allowedOrigins.includes(origin)) return true;
-  // Permitir previews del MISMO proyecto
-  if (origin.endsWith(".vercel.app") && origin.includes("matzdell-frontend-comandas")) {
+
+  // ✅ Permitir previews .vercel.app de TUS proyectos (ambos)
+  if (
+    origin.endsWith(".vercel.app") &&
+    (origin.includes("matzdell-frontend-comandas") || origin.includes("frontend-mesero"))
+  ) {
     return true;
   }
+
   return false;
 }
 
@@ -85,22 +91,12 @@ if (comandasModule && comandasModule.router && typeof comandasModule.router === 
 
 // ---------- Caja (Cajero / Jefe) ----------
 if (cajaRoutes && typeof cajaRoutes === "function") {
-  app.use(
-    "/api/caja",
-    authRequired,
-    roleRequired(["Cajero", "Jefe"]),
-    cajaRoutes
-  );
+  app.use("/api/caja", authRequired, roleRequired(["Cajero", "Jefe"]), cajaRoutes);
 }
 
 // ---------- KPI (solo Jefe) ---------- 👈 AÑADIDO
 if (kpiRoutes && typeof kpiRoutes === "function") {
-  app.use(
-    "/api/kpi",
-    authRequired,
-    roleRequired(["Jefe"]),
-    kpiRoutes
-  );
+  app.use("/api/kpi", authRequired, roleRequired(["Jefe"]), kpiRoutes);
 }
 
 // ---------- Cocina (solo test / ejemplo) ----------
